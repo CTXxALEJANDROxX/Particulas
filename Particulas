@@ -1,18 +1,15 @@
-loadstring([[
 local p = game.Players.LocalPlayer
 
 -- Clases y nombres de efectos a controlar
 local EFFECT_CLASSES = {
-    "ParticleEmitter","Trail","Beam","Fire","Smoke",
-    "Sparkles","SurfaceLight","SpotLight","Explosion","Highlight"
+    "ParticleEmitter"
 }
 local EFFECT_KEYS = {
-    "Agility","Effect","Aura","FX","Energy","Glow",
-    "Shine","Flash","Spark","Smoke","Trail","Light","Fire"
+    "Agility", "Effect", "Aura", "FX", "Energy", "Trail"
 }
 
 -- Nombres de efectos de mascota que NO tocamos
-local PET_EFFECTS = { "PetStat","PetAura","PetGlow" }
+local PET_EFFECTS = { "PetStat", "PetAura", "PetGlow" }
 
 -- Helper: true si el nombre corresponde a un efecto de mascota
 local function isPetEffect(name)
@@ -38,19 +35,32 @@ end
 -- Almacenamos aquí los efectos cuando los ocultamos: [obj] = originalParent
 _G.StoredEffects = _G.StoredEffects or {}
 
--- Oculta todos los efectos actuales
-local function hideAll()
+-- Función para ocultar los efectos poco a poco (uno a uno)
+local function hideGradually()
+    local effects = {}
+    -- Almacenamos los efectos en una tabla
     for _, v in ipairs(game:GetDescendants()) do
         if isOurEffect(v) and not isPetEffect(v.Name) and not _G.StoredEffects[v] then
+            table.insert(effects, v)
             pcall(function()
                 _G.StoredEffects[v] = v.Parent
                 v.Parent = nil
             end)
         end
     end
+
+    -- Ahora ocultamos los efectos uno por uno
+    for i, effect in ipairs(effects) do
+        wait(0.1)  -- Retraso gradual entre cada efecto
+        pcall(function()
+            if effect.Parent == nil then
+                effect.Parent = _G.StoredEffects[effect]
+            end
+        end)
+    end
 end
 
--- Restaura todos los efectos que tenemos guardados
+-- Función para restaurar los efectos
 local function showAll()
     for v, originalParent in pairs(_G.StoredEffects) do
         pcall(function()
@@ -67,7 +77,7 @@ if not _G.ToggleInit then
     -- Al reaparecer el personaje, reaplicamos el modo actual
     p.CharacterAdded:Connect(function()
         wait(1)
-        if _G.EffectsHidden then hideAll() else showAll() end
+        if _G.EffectsHidden then hideGradually() else showAll() end
     end)
     -- Si se generan efectos nuevos mientras estamos en “ocultar”
     game.DescendantAdded:Connect(function(o)
@@ -87,10 +97,9 @@ end
 -- Alternamos la bandera y ejecutamos
 _G.EffectsHidden = not _G.EffectsHidden
 if _G.EffectsHidden then
-    hideAll()
+    hideGradually()
     warn("▶ Efectos ocultos")
 else
     showAll()
     warn("▶ Efectos restaurados")
 end
-]])()
