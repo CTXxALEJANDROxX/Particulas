@@ -6,8 +6,7 @@ local EFFECT_CLASSES = {
     "ParticleEmitter"
 }
 local EFFECT_KEYS = {
-    "Agility","Effect","Aura","FX","Energy","Glow",
-    "Shine","Flash","Spark","Smoke","Trail","Light","Fire"
+    "Effect",
 }
 
 -- Nombres de efectos de mascota que NO tocamos
